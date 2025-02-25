@@ -1,30 +1,52 @@
 'use client'
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { useRouter } from "next/navigation";
+import { AuthContext } from "../contexts/AuthContext";
+import { api } from "../services/api";
 
 export default function Chat() {
-
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const ws = new WebSocket("ws://localhost:8080"); // Conectando ao servidor WebSocket
 
+  const { user, isAuthenticated } = useContext(AuthContext);
+  const router = useRouter();
+
   useEffect(() => {
-    ws.onopen = () => {
-      console.log("🟢 Conectado ao WebSocket!");
-    };
+    // Se não estiver logado, redireciona para login
+    console.log(user)
+    if (!user) {
+      router.push("/login");
+    } else {
 
-    ws.onmessage = (event) => {
-      const receivedMessage = JSON.parse(event.data);
-      setMessage((prev) => [...prev, receivedMessage.text]);
-    };
+      const fetchData = async () => {
+        try {
+          await api.get('/api');
+        } catch (error) {
+          console.error("Erro ao buscar API:", error);
+        }
+      };
 
-    ws.onclose = () => {
-      console.log("🔴 WebSocket desconectado.");
-    };
+      fetchData();
 
-    return () => {
-      ws.close();
-    };
-  }, []);
+      ws.onopen = () => {
+        console.log("🟢 Conectado ao WebSocket!");
+      };
+
+      ws.onmessage = (event) => {
+        const receivedMessage = JSON.parse(event.data);
+        setMessages((prev) => [...prev, receivedMessage.text]); // Corrigido para adicionar ao array
+      };
+
+      ws.onclose = () => {
+        console.log("🔴 WebSocket desconectado.");
+      };
+
+      return () => {
+        ws.close();
+      };
+    }
+  }, []); // Adiciona `user` como dependência
 
   const sendMessage = () => {
     if (message.trim() !== "") {
