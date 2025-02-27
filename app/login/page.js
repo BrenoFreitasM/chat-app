@@ -3,6 +3,7 @@
 import { useContext, useState } from "react";
 import { useForm } from 'react-hook-form';
 import { AuthContext } from "../contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 
 export default function LoginPage() {
@@ -11,6 +12,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const { register, handleSubmit } = useForm();
   const { signIn } = useContext(AuthContext);
+
+  const router = useRouter();
 
   async function handleSingIn(data) {
     await signIn(data);
@@ -32,7 +35,7 @@ export default function LoginPage() {
               placeholder="seuemail@email.com"
             />
           </div>
-          <div className="mt-3">
+          <div className="mt-3 mb-3">
             <label className="block text-sm font-medium">Senha</label>
             <input
               {...register('password')}
@@ -42,6 +45,17 @@ export default function LoginPage() {
               className="w-full mt-1 p-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="••••••"
             />
+          </div>
+          <div className="flex flex-col items-center justify-center">
+            <p className="mb-1 text-sm text-gray-400">
+              Ainda não tem cadastro?{" "}
+              <a
+                href="/register" // Removido o onClick e usado href para melhor acessibilidade
+                className="text-blue-500 hover:underline"
+              >
+                Registre-se
+              </a>
+            </p>
           </div>
           <button
             type="submit"

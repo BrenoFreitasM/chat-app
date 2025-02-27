@@ -14,7 +14,6 @@ export default function Chat() {
 
   useEffect(() => {
     // Se não estiver logado, redireciona para login
-    console.log(user)
     if (!user) {
       router.push("/login");
     } else {
