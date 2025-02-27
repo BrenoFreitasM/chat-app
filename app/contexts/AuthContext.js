@@ -64,21 +64,15 @@ export function AuthProvider({ children }) {
 
         try {
 
-            console.log('Email: ', data.email);
-            console.log("Password: ", data.password)
             const response = await axios.post('http://localhost:4000/api/auth/login', {
                 email: data.email, // 'seu_email', // Substitua pelo email do usuário
                 password: data.password // 'sua_senha' // Substitua pela senha do usuário
             });
 
-            console.log(response.status)
             if (response.status !== 200) {
                 console.log('Erro no login:', response.data.message);
                 alert('❌ Erro ao fazer login. Verifique suas credenciais.');
             }
-
-            // Login bem-sucedido
-            console.log('Login bem-sucedido:', response.data);
 
             // // Armazene o token JWT (exemplo)
             // localStorage.setItem('token', response.data.token);

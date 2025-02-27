@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "../contexts/AuthContext";
 import { api } from "../services/api";
@@ -7,72 +7,68 @@ import { api } from "../services/api";
 export default function Chat() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  const ws = new WebSocket("ws://localhost:8080"); // Conectando ao servidor WebSocket
+  const ws = useRef(null);
 
   const { user, isAuthenticated } = useContext(AuthContext);
   const router = useRouter();
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    // Se não estiver logado, redireciona para login
     if (!user) {
       router.push("/login");
     } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 
-      const fetchData = async () => {
-        try {
-          await api.get('/api');
-        } catch (error) {
-          console.error("Erro ao buscar API:", error);
-        }
-      };
+      ws.current = new WebSocket("ws://localhost:8080");
 
-      fetchData();
-
-      ws.onopen = () => {
+      ws.current.onopen = () => {
         console.log("🟢 Conectado ao WebSocket!");
       };
 
-      ws.onmessage = (event) => {
+      ws.current.onmessage = (event) => {
         const receivedMessage = JSON.parse(event.data);
-        setMessages((prev) => [...prev, receivedMessage.text]); // Corrigido para adicionar ao array
+        setMessages((prev) => [...prev, receivedMessage]);
       };
 
-      ws.onclose = () => {
+      ws.current.onclose = () => {
         console.log("🔴 WebSocket desconectado.");
       };
 
       return () => {
-        ws.close();
+        ws.current.close();
       };
     }
-  }, []); // Adiciona `user` como dependência
+  }, [user]);
 
   const sendMessage = () => {
     if (message.trim() !== "") {
-      const data = { text: message };
-      ws.send(JSON.stringify(data));
+      const data = { text: message, sender: user };
+      ws.current.send(JSON.stringify(data));
       setMessage("");
     }
   };
 
   return (
-    <div className="flex flex-col h-screen p-4 bg-gray-100">
-      <div className="flex-1 overflow-y-auto bg-white p-4 rounded shadow">
+    <div className="flex flex-col h-screen p-4 bg-gray-900 text-white"> 
+      <div className="flex-1 overflow-y-auto bg-gray-800 p-4 rounded shadow"> 
         {messages.map((msg, index) => (
-          <div key={index} className="p-2 bg-gray-200 rounded mb-2">
-            {msg}
+          <div 
+            key={index} 
+            className={`p-2 rounded mb-2 ${msg.sender === user ? 'bg-blue-500 text-white text-right' : 'bg-gray-700 text-left'}`}>
+            <strong>{msg.sender || 'Anônimo'}:</strong> {msg.text}
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
       <div className="mt-4 flex">
         <input
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className="flex-1 p-2 border rounded-l"
+          className="flex-1 p-2 border border-gray-700 bg-gray-800 rounded-l text-white"
           placeholder="Digite sua mensagem..."
         />
-        <button onClick={sendMessage} className="bg-blue-500 text-white px-4 rounded-r">
+        <button onClick={sendMessage} className="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-r">
           Enviar
         </button>
       </div>

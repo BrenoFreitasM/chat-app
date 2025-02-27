@@ -19,7 +19,6 @@ export default function RegisterPage() {
   async function handleSignUp(data) { // Changed function name
     try {
       //await signUp(data); // Call the signUp function from the context
-      console.log(data);
       await axios.post('http://localhost:4000/api/users/create', {
         name: data.name,
         email: data.email,
